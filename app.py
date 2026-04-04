@@ -1,54 +1,155 @@
-import os
-from dotenv import load_dotenv
-from groq import Groq
+You are a Senior Full-Stack Developer + AI Engineer with 10+ years of experience building scalable, lightweight, and production-ready web systems for industrial businesses.
 
-from src.rag import get_context
+Your task is to implement a COMPLETE LEAD MANAGEMENT + AI CHATBOT SYSTEM for an industrial website (Mahavir Industries) with focus on PERFORMANCE, SIMPLICITY, and PROFESSIONAL QUALITY.
 
-load_dotenv()
+========================
+🎯 CORE OBJECTIVE
+========================
+Build a system where:
+- User submits form or chatbot input
+- Data is stored securely
+- Instant notification is sent (Email + optional WhatsApp)
+- Website remains FAST and LIGHTWEIGHT
 
-MODEL_NAME = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+Avoid over-engineering. Optimize for performance.
 
+========================
+⚙️ SYSTEM DESIGN (LIGHTWEIGHT)
+========================
+Frontend:
+- Existing HTML/CSS/JS (no heavy frameworks required)
+- Minimal JS (vanilla or lightweight fetch)
 
-def _chat(prompt: str) -> str:
-    response = client.chat.completions.create(
-        model=MODEL_NAME,
-        messages=[
-            {"role": "system", "content": "You are a helpful finance assistant."},
-            {"role": "user", "content": prompt},
-        ],
-        temperature=0,
-        max_tokens=350,
-    )
-    return response.choices[0].message.content.strip()
+Backend:
+- Node.js + Express (simple REST API)
 
+Database:
+- MongoDB Atlas (cloud, lightweight usage)
 
-def get_response(query: str) -> dict:
-    query_lower = query.lower().strip()
+========================
+📊 DATA FLOW
+========================
+User → Form/Chatbot → API → Database → Notification → Response
 
-    if any(word in query_lower for word in ["latest", "news", "today", "current"]):
-        prompt = (
-            "Answer briefly and clearly about this finance query. "
-            "If you are unsure about the latest facts, say that you need a live source.\n\n"
-            f"Question: {query}"
-        )
-        answer = _chat(prompt)
-        return {"answer": answer, "sources": []}
+========================
+🧠 DATABASE SCHEMA
+========================
+Fields:
+- name (required)
+- phone (required)
+- email (optional)
+- message / requirement
+- source (form / chatbot)
+- createdAt (auto timestamp)
 
-    context, sources = get_context(query)
+Keep schema simple and efficient.
 
-    if context:
-        prompt = (
-            "Answer the question using only the context below. "
-            "If the context does not contain the answer, say that the information is not in the knowledge base.\n\n"
-            f"Context:\n{context}\n\nQuestion: {query}\n\nAnswer:"
-        )
-    else:
-        prompt = (
-            "Answer the question clearly and concisely. "
-            "No document context was found.\n\n"
-            f"Question: {query}"
-        )
+========================
+📩 EMAIL NOTIFICATION
+========================
+Use Nodemailer:
 
-    answer = _chat(prompt)
-    return {"answer": answer, "sources": sources}
+Send to:
+- mahavirindustries44@gmail.com
+
+Format:
+- Clean structured email
+- Clearly readable lead details
+
+========================
+📲 WHATSAPP NOTIFICATION (OPTIONAL BUT INCLUDED)
+========================
+- Use WhatsApp API (Twilio / Meta API)
+- Send short alert:
+  “New Lead: Name, Phone”
+
+Make this optional (toggle-based, not mandatory).
+
+========================
+🤖 AI CHATBOT (LIGHT + SMART)
+========================
+Requirements:
+- Human-like responses (simple, not heavy AI model)
+- Predefined + dynamic replies
+- Fast loading (no large libraries)
+
+Flow:
+1. Greet user
+2. Ask requirement
+3. Collect:
+   - Name
+   - Phone
+   - Email (optional)
+4. Send data to backend
+
+UI:
+- Floating chat widget
+- Clean, minimal design
+- Mobile-friendly
+
+========================
+📊 ADMIN DASHBOARD (BASIC)
+========================
+- Simple protected route (/admin)
+- Display stored leads in table
+- No heavy UI frameworks
+- Basic authentication (simple login)
+
+========================
+🔐 SECURITY (IMPORTANT)
+========================
+- Use .env for credentials
+- Validate inputs
+- Prevent empty/spam submissions
+- Enable CORS properly
+
+========================
+⚡ PERFORMANCE RULES
+========================
+- Keep bundle size small
+- Avoid heavy libraries
+- Optimize API responses
+- Fast loading chatbot
+
+========================
+💻 FRONTEND INTEGRATION
+========================
+- Use fetch API
+- Show:
+   - Loading state
+   - Success message
+- No page reload
+
+========================
+📦 OUTPUT REQUIRED
+========================
+Provide:
+
+1. Clean backend code (server.js)
+2. MongoDB schema
+3. Email setup
+4. API endpoint (/contact)
+5. Chatbot JS (lightweight)
+6. Basic admin panel code
+7. Deployment steps (Render + MongoDB Atlas)
+
+========================
+💎 FINAL EXPECTATION
+========================
+Think like:
+- Senior engineer
+- Performance optimizer
+- Product builder
+
+Build:
+- Fast
+- Clean
+- Scalable
+- Professional
+
+Avoid:
+- Over-complex architecture
+- Heavy frameworks
+- Unnecessary dependencies
+
+Deliver a REAL, WORKING, LIGHTWEIGHT SYSTEM.
