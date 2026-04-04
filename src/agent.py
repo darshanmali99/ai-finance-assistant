@@ -20,22 +20,42 @@ def get_response(query):
     retriever = get_retriever()
     search = DuckDuckGoSearchRun()
 
-    # 🔹 Decide tool
-    if "latest" in query.lower() or "news" in query.lower():
-        return search.run(query)
+    query_lower = query.lower()
 
-    # 🔹 RAG
+    # =========================
+    # 🔹 SEARCH (WITH FALLBACK)
+    # =========================
+    if "latest" in query_lower or "news" in query_lower:
+        try:
+            result = search.run(query)
+
+            if not result or "No good" in result:
+                # fallback to LLM knowledge
+                return llm.invoke(
+                    f"Give latest general financial update about: {query}"
+                ).content
+
+            return result
+
+        except Exception:
+            return llm.invoke(
+                f"Give latest general financial update about: {query}"
+            ).content
+
+    # =========================
+    # 🔹 RAG (DOCUMENT BASED)
+    # =========================
     docs = retriever.invoke(query)
 
     if not docs:
-        return "No relevant information found."
+        return "No relevant information found in knowledge base."
 
     context = "\n\n".join([doc.page_content for doc in docs[:3]])
 
     prompt = f"""
 You are a professional financial assistant.
 
-Answer clearly using the context.
+Answer clearly and in simple terms.
 
 Context:
 {context}

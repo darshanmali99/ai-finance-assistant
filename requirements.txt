@@ -1,8 +1,5 @@
-langchain==0.1.16
-langchain-core==0.1.46
-langchain-community==0.0.34
 langchain-groq==0.0.1
-
+langchain-community==0.0.34
 chromadb==0.4.24
 sentence-transformers
 pypdf
