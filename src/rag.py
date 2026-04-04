@@ -1,15 +1,21 @@
-from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
+import chromadb
+from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
+
+client = chromadb.Client()
+collection = client.get_or_create_collection("finance")
 
 
-def get_retriever():
-    embedding = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
+def get_context(query):
+    results = collection.query(
+        query_texts=[query],
+        n_results=3
     )
 
-    vectordb = Chroma(
-        persist_directory="vectordb",
-        embedding_function=embedding
-    )
+    docs = results.get("documents", [])
 
-    return vectordb.as_retriever(search_kwargs={"k": 3})
+    if not docs:
+        return ""
+
+    return "\n\n".join(docs[0])

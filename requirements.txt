@@ -1,9 +1,7 @@
-langchain-groq==0.0.1
-langchain-community==0.0.34
+groq
 chromadb==0.4.24
 sentence-transformers
 pypdf
 python-dotenv
 streamlit
-duckduckgo-search
 numpy==1.26.4

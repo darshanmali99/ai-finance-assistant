@@ -1,61 +1,31 @@
 import os
 from dotenv import load_dotenv
+from groq import Groq
 
-from langchain_groq import ChatGroq
-from langchain_community.tools import DuckDuckGoSearchRun
-
-from src.rag import get_retriever
+from src.rag import get_context
 
 load_dotenv()
 
 
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+
 def get_response(query):
-    llm = ChatGroq(
-        model_name="llama-3.1-8b-instant",
-        groq_api_key=os.getenv("GROQ_API_KEY"),
-        temperature=0,
-        max_tokens=300
-    )
-
-    retriever = get_retriever()
-    search = DuckDuckGoSearchRun()
-
     query_lower = query.lower()
 
     # =========================
-    # 🔹 SEARCH (WITH FALLBACK)
+    # 🔹 SIMPLE SEARCH FALLBACK
     # =========================
     if "latest" in query_lower or "news" in query_lower:
-        try:
-            result = search.run(query)
+        prompt = f"Give latest financial news about: {query}"
+    else:
+        context = get_context(query)
 
-            if not result or "No good" in result:
-                # fallback to LLM knowledge
-                return llm.invoke(
-                    f"Give latest general financial update about: {query}"
-                ).content
+        if not context:
+            return "No relevant information found."
 
-            return result
-
-        except Exception:
-            return llm.invoke(
-                f"Give latest general financial update about: {query}"
-            ).content
-
-    # =========================
-    # 🔹 RAG (DOCUMENT BASED)
-    # =========================
-    docs = retriever.invoke(query)
-
-    if not docs:
-        return "No relevant information found in knowledge base."
-
-    context = "\n\n".join([doc.page_content for doc in docs[:3]])
-
-    prompt = f"""
-You are a professional financial assistant.
-
-Answer clearly and in simple terms.
+        prompt = f"""
+You are a financial assistant.
 
 Context:
 {context}
@@ -63,8 +33,13 @@ Context:
 Question:
 {query}
 
-Answer:
+Answer clearly:
 """
 
-    response = llm.invoke(prompt)
-    return response.content
+    completion = client.chat.completions.create(
+        model="llama3-8b-8192",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0
+    )
+
+    return completion.choices[0].message.content
