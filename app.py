@@ -1,48 +1,54 @@
-import streamlit as st
+import os
 from dotenv import load_dotenv
-from src.agent import get_response
+from groq import Groq
+
+from src.rag import get_context
 
 load_dotenv()
 
-st.set_page_config(page_title="AI Finance Assistant", page_icon="🤖")
+MODEL_NAME = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-# =========================
-# TITLE
-# =========================
-st.title("🤖 AI Finance Assistant")
-st.caption("RAG + Search + LLM powered system")
 
-# =========================
-# CHAT MEMORY
-# =========================
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-# =========================
-# DISPLAY CHAT
-# =========================
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-
-# =========================
-# INPUT
-# =========================
-query = st.chat_input("Ask about RBI, SEBI, Finance, or Latest News...")
-
-if query:
-    # user message
-    st.session_state.messages.append({"role": "user", "content": query})
-
-    with st.chat_message("user"):
-        st.markdown(query)
-
-    # assistant response
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            response = get_response(query)
-            st.markdown(response)
-
-    st.session_state.messages.append(
-        {"role": "assistant", "content": response}
+def _chat(prompt: str) -> str:
+    response = client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=[
+            {"role": "system", "content": "You are a helpful finance assistant."},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0,
+        max_tokens=350,
     )
+    return response.choices[0].message.content.strip()
+
+
+def get_response(query: str) -> dict:
+    query_lower = query.lower().strip()
+
+    if any(word in query_lower for word in ["latest", "news", "today", "current"]):
+        prompt = (
+            "Answer briefly and clearly about this finance query. "
+            "If you are unsure about the latest facts, say that you need a live source.\n\n"
+            f"Question: {query}"
+        )
+        answer = _chat(prompt)
+        return {"answer": answer, "sources": []}
+
+    context, sources = get_context(query)
+
+    if context:
+        prompt = (
+            "Answer the question using only the context below. "
+            "If the context does not contain the answer, say that the information is not in the knowledge base.\n\n"
+            f"Context:\n{context}\n\nQuestion: {query}\n\nAnswer:"
+        )
+    else:
+        prompt = (
+            "Answer the question clearly and concisely. "
+            "No document context was found.\n\n"
+            f"Question: {query}"
+        )
+
+    answer = _chat(prompt)
+    return {"answer": answer, "sources": sources}
