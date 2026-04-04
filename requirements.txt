@@ -1,0 +1,12 @@
+langchain
+langchain-groq
+langchain-community
+duckduckgo-search
+chromadb
+sentence-transformers
+python-dotenv
+pdfplumber
+pypdf
+langchain-text-splitters
+ragas
+datasets
