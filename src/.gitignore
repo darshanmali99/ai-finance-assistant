@@ -1,6 +1,0 @@
-.env
-venv/
-__pycache__/
-vectordb/
-data/
-*.sqlite3
